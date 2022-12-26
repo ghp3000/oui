@@ -6,6 +6,7 @@
  *	published by the Free Software Foundation.
  */
 
+#include <linux/version.h>
 #include <linux/slab.h>
 #include <linux/jhash.h>
 #include <asm/unaligned.h>
