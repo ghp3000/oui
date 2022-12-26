@@ -71,7 +71,6 @@ static const struct proc_ops proc_ops = {
     .release 	= single_release
 };
 #else
-
 const static struct file_operations proc_ops = {
     .owner 		= THIS_MODULE,
     .open  		= proc_open,
@@ -80,6 +79,7 @@ const static struct file_operations proc_ops = {
     .llseek 	= seq_lseek,
     .release 	= single_release
 };
+#endif
 
 static u32 oui_bwm_hook(void *priv, struct sk_buff *skb, const struct nf_hook_state *state)
 {
