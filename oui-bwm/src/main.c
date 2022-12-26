@@ -18,8 +18,8 @@
 #include "term.h"
 #include "subnet.h"
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,6,0)
-#define HAVE_PROC_OPS
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,18,0)
+#define HAVE_PROC_CREATE_SINGLE
 #endif
 
 static int proc_show(struct seq_file *s, void *v)
@@ -57,20 +57,12 @@ static ssize_t proc_write(struct file *file, const char __user *buf, size_t size
     return size;
 }
 
+#ifndef HAVE_PROC_CREATE_SINGLE
 static int proc_open(struct inode *inode, struct file *file)
 {
     return single_open(file, proc_show, NULL);
 }
 
-#ifdef HAVE_PROC_OPS
-static const struct proc_ops proc_ops = {
-    .open  		= proc_open,
-    .read   	= seq_read,
-    .write		= proc_write,
-    .llseek 	= seq_lseek,
-    .release 	= single_release
-};
-#else
 const static struct file_operations proc_ops = {
     .owner 		= THIS_MODULE,
     .open  		= proc_open,
@@ -133,8 +125,11 @@ static int __init oui_bwm_init(void)
         pr_err("can't create dir /proc/oui/\n");
         return -ENODEV;;
     }
-
+    #ifdef HAVE_PROC_CREATE_SINGLE
+    proc_create_single("config", 0644, proc, proc_show);
+    #else
     proc_create("config", 0644, proc, &proc_ops);
+    #endif
 
     subnet_init(proc);
 

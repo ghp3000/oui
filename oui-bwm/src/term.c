@@ -17,6 +17,10 @@
 
 #define TERM_HASH_SIZE 				(1 << 8)
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,18,0)
+#define HAVE_PROC_CREATE_SINGLE
+#endif
+
 static struct kmem_cache *term_cache __read_mostly;
 static struct hlist_head terms[TERM_HASH_SIZE];
 static u32 hash_rnd __read_mostly;
@@ -139,6 +143,7 @@ static ssize_t proc_write(struct file *file, const char __user *buf, size_t size
     return size;
 }
 
+#ifndef HAVE_PROC_CREATE_SINGLE
 static int proc_open(struct inode *inode, struct file *file)
 {
 	return single_open(file, proc_show, NULL);
@@ -152,6 +157,7 @@ const static struct file_operations proc_ops = {
 	.llseek 	= seq_lseek,
 	.release 	= single_release
 };
+#endif
 
 static void term_cleanup(struct work_struct *work)
 {
@@ -221,7 +227,12 @@ int term_init(struct proc_dir_entry *proc)
 	if (!term_cache)
 		return -ENOMEM;
 
+	#ifdef HAVE_PROC_CREATE_SINGLE
+    proc_create_single("term", 0644, proc, proc_show);
+    #else
     proc_create("term", 0644, proc, &proc_ops);
+    #endif
+    // proc_create("term", 0644, proc, &proc_ops);
 
 	rwlock_init(&lock);
 

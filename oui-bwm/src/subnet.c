@@ -12,6 +12,10 @@
 
 #include "subnet.h"
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,18,0)
+#define HAVE_PROC_CREATE_SINGLE
+#endif
+
 static LIST_HEAD(subnets);
 
 static void clear_subnet(void)
@@ -99,6 +103,7 @@ static ssize_t proc_write(struct file *file, const char __user *buf, size_t size
     return size;
 }
 
+#ifndef HAVE_PROC_CREATE_SINGLE
 static int proc_open(struct inode *inode, struct file *file)
 {
 	return single_open(file, proc_show, NULL);
@@ -112,10 +117,16 @@ const static struct file_operations proc_ops = {
 	.llseek 	= seq_lseek,
 	.release 	= single_release
 };
+#endif
 
 int subnet_init(struct proc_dir_entry *proc)
 {
+    #ifdef HAVE_PROC_CREATE_SINGLE
+    proc_create_single("subnet", 0644, proc, proc_show);
+    #else
     proc_create("subnet", 0644, proc, &proc_ops);
+    #endif
+    // proc_create("subnet", 0644, proc, &proc_ops);
 
     return 0;
 }
