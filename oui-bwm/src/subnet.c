@@ -6,6 +6,7 @@
  *	published by the Free Software Foundation.
  */
 
+#include <linux/version.h>
 #include <linux/inetdevice.h>
 #include <linux/proc_fs.h>
 #include <linux/inet.h>
