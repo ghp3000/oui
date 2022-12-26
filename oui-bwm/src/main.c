@@ -18,6 +18,10 @@
 #include "term.h"
 #include "subnet.h"
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,6,0)
+#define HAVE_PROC_OPS
+#endif
+
 static int proc_show(struct seq_file *s, void *v)
 {
     seq_printf(s, "ttl: %ld\n", get_term_ttl());
@@ -57,6 +61,16 @@ static int proc_open(struct inode *inode, struct file *file)
 {
     return single_open(file, proc_show, NULL);
 }
+
+#ifdef HAVE_PROC_OPS
+static const struct proc_ops proc_ops = {
+    .open  		= proc_open,
+    .read   	= seq_read,
+    .write		= proc_write,
+    .llseek 	= seq_lseek,
+    .release 	= single_release
+};
+#else
 
 const static struct file_operations proc_ops = {
     .owner 		= THIS_MODULE,
